@@ -1,6 +1,6 @@
 export const registerCreds={
-    username:'mhacxer97878',
+    username:'soultone914',
     password:'Test@12345',
-    email:'soultonew58@gmail.com',
-    org:'Teams'
+    email:'wassisoultone1@gmail.com',
+    org:'Teams 2'
 }

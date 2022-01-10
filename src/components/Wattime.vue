@@ -16,26 +16,30 @@ export default {
   },
   setup() {
     const register = async () => {
-      const res = await axios(`/register`, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-        credentials: "same-origin",
-        data: registerCreds,
-      });
-
-      console.log({ res });
+      try {
+        const res = await axios(`/register`, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+          },
+          data: registerCreds,
+        });
+        console.log({res})
+      } catch (error) {
+        console.log({ error });
+      }
     };
 
     const login = async () => {
       const res = await axios(`/login`, {
         method: "GET",
+        mode: "no-cors",
         headers: {
-          Authorization: "Basic bWhhY3hlcm1vb2Q5MTQ6VGVzdEAxMjM0NQ==",
+          Authorization: `Basic ${btoa(
+            `${registerCreds.username}:${registerCreds.password}`
+          )}`,
           "Access-Control-Allow-Origin": "*",
           "Content-Type": "application/json",
         },
