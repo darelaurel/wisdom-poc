@@ -92,3 +92,38 @@ export const getEmissionForcast = async (values) => {
         return data.message
     }
 }
+
+
+export const getHistorical = async (ba) => {
+    try {
+        const { data } = await axios('/historical', {
+            method: "GET",
+            mode: "no-cors",
+            params: {
+                ba
+            },
+            responseType:'blob',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json",
+            },
+        });
+
+        const url = window.URL.createObjectURL(new Blob([data]))
+
+        const link = document.createElement('a')
+
+        link.href= url
+
+        link.setAttribute('download','historical.zip')
+
+        document.body.appendChild(link)
+
+        return { link }
+
+    } catch (error) {
+
+        return { error:'Invalid scope. You do not have sufficient access to this resource. See https://api.watttime.org/plans/ for more information or email contact@watttime.org for pricing. Please note that all users are allowed free access to CAISO_NORTH.'}
+    }
+}

@@ -4,7 +4,7 @@
     <button @click="RealTimeEmissionIndex">Real Time Emission Index</button>
     <button @click="gridEmission">Grid Emission Data</button> <input type="checkbox"  v-model="grid_emission_checked" id="">
     <button @click="emissionForecast">Forecast Emission Data</button> <input type="checkbox"  v-model="forecast_emission_checked" id="">
-    {{forecast_emission_checked}}
+    <button @click="historical">Historical Emission</button>
     <div v-if="grid_emission_checked">
       <form>
         <input type="datetime-local" v-model="gridEmissionData.starttime">
@@ -23,12 +23,14 @@
     <Card :data="realTimeEmissionIndex" />
     <Card :data="gridEmissionValues" />
     <Card :data="emissionForecastValues" />
+    <Card :data="historicalResponseError" />
+
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { getBalancingAuthority,getRealTimeEmissionIndex ,getGridEmissionData,getEmissionForcast} from "./../config/api";
+import { getBalancingAuthority,getRealTimeEmissionIndex ,getGridEmissionData,getEmissionForcast, getHistorical} from "./../config/api";
 import { registerCreds } from "../config/credentials";
 import { onMounted } from "@vue/runtime-core";
 import Card from "./Card.vue"
@@ -50,6 +52,7 @@ export default {
       realTimeEmissionIndex:null,
       gridEmissionValues:null,
       emissionForecastValues:null,
+      historicalResponseError:'',
       gridEmissionData:{
         starttime:null,
         endtime:null
@@ -140,6 +143,23 @@ export default {
         this.emissionForecastValues=response.data
       } catch (error) {
         this.emissionForecastValues=error.message   
+      }
+    },
+
+    async historical(){
+
+       try {
+
+        const response = await getHistorical('CAISO_NORTH')
+
+        console.log({response})
+
+        if(!response.link)throw Error(response.error);
+
+        response.link.click()
+
+      } catch (error) {
+        this.historicalResponseError=error
       }
     }
 

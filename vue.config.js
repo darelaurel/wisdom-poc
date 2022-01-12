@@ -24,6 +24,10 @@ module.exports = {
             '/forecast': {
                 target: 'https://api2.watttime.org/v2',
                 changeOrigin: true
+            },
+            '/historical': {
+                target: 'https://api2.watttime.org/v2',
+                changeOrigin: true
             }
         }
     }
