@@ -1,12 +1,37 @@
 <template>
-  <div></div>
+  <div>
+    <button @click="BalancingAuthority">Balancing Authority</button>
+    <button @click="RealTimeEmissionIndex">Real Time Emission Index</button>
+    <button @click="gridEmission">Grid Emission Data</button> <input type="checkbox"  v-model="grid_emission_checked" id="">
+    <button @click="emissionForecast">Forecast Emission Data</button> <input type="checkbox"  v-model="forecast_emission_checked" id="">
+    {{forecast_emission_checked}}
+    <div v-if="grid_emission_checked">
+      <form>
+        <input type="datetime-local" v-model="gridEmissionData.starttime">
+        <input type="datetime-local" v-model="gridEmissionData.endtime">
+      </form>
+    </div>
+
+    <div v-if="forecast_emission_checked">
+      <form>
+        <input type="datetime-local" v-model="emissionForecastData.starttime">
+        <input type="datetime-local" v-model="emissionForecastData.endtime">
+      </form>
+    </div>
+
+    <Card :data="ba" />
+    <Card :data="realTimeEmissionIndex" />
+    <Card :data="gridEmissionValues" />
+    <Card :data="emissionForecastValues" />
+  </div>
 </template>
 
 <script>
-import { onMounted } from "@vue/runtime-core";
 import axios from "axios";
+import { getBalancingAuthority,getRealTimeEmissionIndex ,getGridEmissionData,getEmissionForcast} from "./../config/api";
 import { registerCreds } from "../config/credentials";
-// import { BASE_URL } from "./../config/api";
+import { onMounted } from "@vue/runtime-core";
+import Card from "./Card.vue"
 export default {
   props: {
     data: {
@@ -14,6 +39,28 @@ export default {
       required: true,
     },
   },
+  components:{
+    Card
+  },
+  data(){
+    return {
+      grid_emission_checked:false,
+      forecast_emission_checked:false,
+      ba:null,
+      realTimeEmissionIndex:null,
+      gridEmissionValues:null,
+      emissionForecastValues:null,
+      gridEmissionData:{
+        starttime:null,
+        endtime:null
+      },
+      emissionForecastData:{
+        starttime:null,
+        endtime:null
+      }
+    }
+  },
+  created() {},
   setup() {
     const register = async () => {
       try {
@@ -26,14 +73,14 @@ export default {
           },
           data: registerCreds,
         });
-        console.log({res})
+        console.log({ res });
       } catch (error) {
         console.log({ error });
       }
     };
 
     const login = async () => {
-      const res = await axios(`/login`, {
+      const { data } = await axios(`/login`, {
         method: "GET",
         mode: "no-cors",
         headers: {
@@ -45,13 +92,59 @@ export default {
         },
       });
 
-      console.log({ res });
+      localStorage.setItem("token", data.token);
     };
 
     onMounted(() => {
-      register();
-      login();
+      if (!localStorage.getItem("token")) register();
+      else login();
     });
+  },
+  methods: {
+    async BalancingAuthority(){
+
+      try {
+        const response = await getBalancingAuthority(42.372,-72.519)
+        if(!response.data)throw Error(response);
+        this.ba=response.data
+      } catch (error) {
+        this.ba=error.message   
+      }
+
+    },
+
+    async RealTimeEmissionIndex(){
+      try {
+        const response = await getRealTimeEmissionIndex(this.ba.abbrev)
+        if(!response.data)throw Error(response);
+        this.realTimeEmissionIndex=response.data
+      } catch (error) {
+        this.realTimeEmissionIndex=error.message   
+      }
+    },
+
+    async gridEmission(){
+      try {
+        const response = await getGridEmissionData({...this.gridEmissionData,ba:'CAISO_NORTH'})
+        if(!response.data)throw Error(response);
+        this.gridEmissionValues=response.data
+      } catch (error) {
+        this.gridEmissionValues=error.message   
+      }
+    },
+
+    async emissionForecast(){
+      try {
+        const response = await getEmissionForcast({...this.emissionForecastData,ba:'CAISO_NORTH'})
+        if(!response.data)throw Error(response);
+        this.emissionForecastValues=response.data
+      } catch (error) {
+        this.emissionForecastValues=error.message   
+      }
+    }
+
+
+
   },
 };
 </script>
