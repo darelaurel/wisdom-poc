@@ -2,20 +2,22 @@
   <div>
     <button @click="BalancingAuthority">Balancing Authority</button>
     <button @click="RealTimeEmissionIndex">Real Time Emission Index</button>
-    <button @click="gridEmission">Grid Emission Data</button> <input type="checkbox"  v-model="grid_emission_checked" id="">
-    <button @click="emissionForecast">Forecast Emission Data</button> <input type="checkbox"  v-model="forecast_emission_checked" id="">
+    <button @click="gridEmission">Grid Emission Data</button>
+    <input type="checkbox" v-model="grid_emission_checked" id="" />
+    <button @click="emissionForecast">Forecast Emission Data</button>
+    <input type="checkbox" v-model="forecast_emission_checked" id="" />
     <button @click="historical">Historical Emission</button>
     <div v-if="grid_emission_checked">
       <form>
-        <input type="datetime-local" v-model="gridEmissionData.starttime">
-        <input type="datetime-local" v-model="gridEmissionData.endtime">
+        <input type="datetime-local" v-model="gridEmissionData.starttime" />
+        <input type="datetime-local" v-model="gridEmissionData.endtime" />
       </form>
     </div>
 
     <div v-if="forecast_emission_checked">
       <form>
-        <input type="datetime-local" v-model="emissionForecastData.starttime">
-        <input type="datetime-local" v-model="emissionForecastData.endtime">
+        <input type="datetime-local" v-model="emissionForecastData.starttime" />
+        <input type="datetime-local" v-model="emissionForecastData.endtime" />
       </form>
     </div>
 
@@ -24,16 +26,14 @@
     <Card :data="gridEmissionValues" />
     <Card :data="emissionForecastValues" />
     <Card :data="historicalResponseError" />
-
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { getBalancingAuthority,getRealTimeEmissionIndex ,getGridEmissionData,getEmissionForcast, getHistorical} from "./../config/api";
 import { registerCreds } from "../config/credentials";
 import { onMounted } from "@vue/runtime-core";
-import Card from "./Card.vue"
+import Card from "./Card.vue";
 export default {
   props: {
     data: {
@@ -41,27 +41,27 @@ export default {
       required: true,
     },
   },
-  components:{
-    Card
+  components: {
+    Card,
   },
-  data(){
+  data() {
     return {
-      grid_emission_checked:false,
-      forecast_emission_checked:false,
-      ba:null,
-      realTimeEmissionIndex:null,
-      gridEmissionValues:null,
-      emissionForecastValues:null,
-      historicalResponseError:'',
-      gridEmissionData:{
-        starttime:null,
-        endtime:null
+      grid_emission_checked: false,
+      forecast_emission_checked: false,
+      ba: null,
+      realTimeEmissionIndex: null,
+      gridEmissionValues: null,
+      emissionForecastValues: null,
+      historicalResponseError: "",
+      gridEmissionData: {
+        starttime: null,
+        endtime: null,
       },
-      emissionForecastData:{
-        starttime:null,
-        endtime:null
-      }
-    }
+      emissionForecastData: {
+        starttime: null,
+        endtime: null,
+      },
+    };
   },
   created() {},
   setup() {
@@ -83,17 +83,11 @@ export default {
     };
 
     const login = async () => {
-      const { data } = await axios(`/login`, {
-        method: "GET",
-        mode: "no-cors",
-        headers: {
-          Authorization: `Basic ${btoa(
-            `${registerCreds.username}:${registerCreds.password}`
-          )}`,
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
+      const { data } = await axios.post("http://localhost:5500/login", {
+        username: registerCreds.username,
+        password: registerCreds.password,
       });
+      console.log(data);
 
       localStorage.setItem("token", data.token);
     };
@@ -104,67 +98,117 @@ export default {
     });
   },
   methods: {
-    async BalancingAuthority(){
-
+    async BalancingAuthority() {
       try {
-        const response = await getBalancingAuthority(42.372,-72.519)
-        if(!response.data)throw Error(response);
-        this.ba=response.data
-      } catch (error) {
-        this.ba=error.message   
-      }
+        const response = await axios.post(
+          "http://localhost:5500/balancing-authority",
+          {
+            lag: "42.372",
+            long: "-72.519",
+            token: localStorage.getItem("token"),
+          }
+        );
 
-    },
-
-    async RealTimeEmissionIndex(){
-      try {
-        const response = await getRealTimeEmissionIndex(this.ba.abbrev)
-        if(!response.data)throw Error(response);
-        this.realTimeEmissionIndex=response.data
+        console.log({ response });
+        if (!response.data) throw Error(response);
+        this.ba = response.data;
       } catch (error) {
-        this.realTimeEmissionIndex=error.message   
+        this.ba = error.message;
       }
     },
 
-    async gridEmission(){
+    async RealTimeEmissionIndex() {
       try {
-        const response = await getGridEmissionData({...this.gridEmissionData,ba:'CAISO_NORTH'})
-        if(!response.data)throw Error(response);
-        this.gridEmissionValues=response.data
+        const response = await axios.post(
+          "http://localhost:5500/real-time-emission-index",
+          {
+            lag: "42.372",
+            long: "-72.519",
+            token: localStorage.getItem("token"),
+          }
+        );
+
+        console.log({ response });
+        if (!response.data) throw Error(response);
+        this.realTimeEmissionIndex = response.data;
       } catch (error) {
-        this.gridEmissionValues=error.message   
+        this.realTimeEmissionIndex = error.message;
       }
     },
 
-    async emissionForecast(){
+    async gridEmission() {
       try {
-        const response = await getEmissionForcast({...this.emissionForecastData,ba:'CAISO_NORTH'})
-        if(!response.data)throw Error(response);
-        this.emissionForecastValues=response.data
+        const response = await axios.post(
+          "http://localhost:5500/grid-emission-data",
+          {
+            ba: "CAISO_NORTH",
+            token: localStorage.getItem("token"),
+          }
+        );
+
+        console.log({ response });
+        if (!response.data) throw Error(response);
+        this.gridEmissionValues = response.data;
       } catch (error) {
-        this.emissionForecastValues=error.message   
+        this.gridEmissionValues = error.message;
       }
     },
 
-    async historical(){
+    async emissionForecast() {
+      try {
+        const response = await axios.post(
+          "http://localhost:5500/emission-forecast",
+          {
+            ba: "CAISO_NORTH",
+            starttime: this.emissionForecastData.starttime,
+            endtime: this.emissionForecastData.endtime,
+            token: localStorage.getItem("token"),
+          }
+        );
 
-       try {
-
-        const response = await getHistorical('CAISO_NORTH')
-
-        console.log({response})
-
-        if(!response.link)throw Error(response.error);
-
-        response.link.click()
-
+        console.log({ response });
+        if (!response.data) throw Error(response);
+        this.emissionForecastValues = response.data;
       } catch (error) {
-        this.historicalResponseError=error
+        this.emissionForecastValues = error.message;
       }
-    }
+    },
 
+    async historical() {
+      try {
+        const response = await axios.post(
+          "http://localhost:5500/historical-emission",
+          {
+            ba: "CAISO_NORTH",
+            token: localStorage.getItem("token"),
+          },
+          {
+            responseType: "blob",
+          }
+        );
 
+        const downloadUrl = window.URL.createObjectURL(
+          new Blob([response.data])
+        );
 
+        const link = document.createElement("a");
+
+        link.href = downloadUrl;
+
+        link.setAttribute("download", "file.zip"); //any other extension
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        console.log({ response });
+        if (!response.data) throw Error(response);
+      } catch (error) {
+        this.ba = error.message;
+      }
+    },
   },
 };
 </script>

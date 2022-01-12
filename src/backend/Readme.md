@@ -1,5 +1,5 @@
 ## API USAGE
-
+## Tous les endpoints sont accessibles via method POST
 ## /signup 
 
 ```node

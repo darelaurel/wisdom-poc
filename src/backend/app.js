@@ -13,7 +13,7 @@ const {
     getHistorical
 } = require('./api/index.js')
 
-app.set('PORT', 8080)
+app.set('PORT', 5500)
 
 app.use(cors({
     origin: '*'
@@ -22,7 +22,11 @@ app.use(cors({
 // parse application/json
 app.use(bodyParser.json())
 
-app.get('/signup', async (req, res) => {
+app.post('/bullshit',(req,res)=>{
+    res.send('bullshit')
+})
+
+app.post('/signup', async (req, res) => {
 
     const credentials = req.body
 
@@ -34,7 +38,7 @@ app.get('/signup', async (req, res) => {
 
 })
 
-app.get('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
 
     const credentials = req.body
 
@@ -46,7 +50,7 @@ app.get('/login', async (req, res) => {
 
 })
 
-app.get('/balancing-authority', async (req, res) => {
+app.post('/balancing-authority', async (req, res) => {
 
     const { lag, long, token } = req.body
 
@@ -58,7 +62,7 @@ app.get('/balancing-authority', async (req, res) => {
 
 })
 
-app.get('/real-time-emission-index', async (req, res) => {
+app.post('/real-time-emission-index', async (req, res) => {
 
     const { ba, lag = null, long = null, token } = req.body
 
@@ -71,7 +75,7 @@ app.get('/real-time-emission-index', async (req, res) => {
 })
 
 
-app.get('/real-time-emission-index', async (req, res) => {
+app.post('/real-time-emission-index', async (req, res) => {
 
     const { ba, lag = null, long = null, token } = req.body
 
@@ -83,7 +87,7 @@ app.get('/real-time-emission-index', async (req, res) => {
 
 })
 
-app.get('/grid-emission-data', async (req, res) => {
+app.post('/grid-emission-data', async (req, res) => {
 
     const { ba, lag = null, long = null, token } = req.body
 
@@ -95,7 +99,7 @@ app.get('/grid-emission-data', async (req, res) => {
 
 })
 
-app.get('/emission-forecast', async (req, res) => {
+app.post('/emission-forecast', async (req, res) => {
 
     const { ba, starttime,endtime, token } = req.body
 
@@ -107,7 +111,7 @@ app.get('/emission-forecast', async (req, res) => {
 
 })
 
-app.get('/historical-emission', async (req, res) => {
+app.post('/historical-emission', async (req, res) => {
 
     const { ba, token } = req.body
 
@@ -120,5 +124,5 @@ app.get('/historical-emission', async (req, res) => {
 })
 
 app.listen(app.get('PORT'), () => {
-    console.log(`Listen on port ${app.get('PORT')}`)
+    console.log(`Listen on port ${app.post('PORT')}`)
 })
