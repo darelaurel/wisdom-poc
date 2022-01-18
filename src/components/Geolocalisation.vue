@@ -2,6 +2,7 @@
   <div>
     <div>
       <Card :data="{ lag, long }" />
+      
 
       <Wattime :data="{ lag, long }" />
 

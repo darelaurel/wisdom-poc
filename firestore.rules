@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  function isOwner(){
+       return isAuth() && resource.data.userId == request.auth.uid;
+  }
+  function isAdmin(){
+       return isAuth() && request.auth.uid == "CaEyi3YxreMCnvMvWjDL47n9z9o2";
+  }
+  function isAuth(){
+       return request.auth != null;
+  }
+
+  match /databases/{database}/documents {
+    match /suppliments/{suppliment}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /supplements/{supplement}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /settings/{setting}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /rlhtruffles/{rlhtruffle}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /protocols/{protocol}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /goals/{goal}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /files/{file}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /pages/{page}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /faq/{faq}/{document=**} {
+      allow read: if true
+      allow write: if isAdmin()
+    }
+    match /users/{userId}/{document=**} {
+    	allow get, list: if isAuth()
+      allow update, delete: if isOwner() || isAdmin()
+      allow create: if isAuth()
+    }
+    match /entries/{entry}/{document=**} {
+      allow get, list, update, delete: if isOwner() || isAdmin()
+      allow create: if isAuth()
+    }
+     match /channels/{channel}/{document=**} {
+      allow read: if isAuth()
+      allow write: if isAuth()
+    }
+    match /messages/{message}/{document=**} {
+      allow read: if isAuth()
+      allow write: if isAuth()
+    }
+    match /users_settings/{users_setting}/{document=**} {
+      allow get, list, update, delete: if isOwner() || isAdmin()
+      allow create: if isAuth()
+    }
+  }
+}
