@@ -32,6 +32,10 @@ const getAccessToken = (req) => {
   return access_token;
 };
 
+router.get('good', (req,res) => {
+  return res.json('good')
+})
+
 router.post("/meetings", async (req, res) => {
   try {
     const token = getAccessToken(req);
