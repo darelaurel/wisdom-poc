@@ -2,16 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ZoomApi = require('./../services/ZoomApi.js')
 const moment = require("moment-timezone");
-const config = require("../config");
-const CounselorSetting = require("../services/CounselorSetting.js");
 
-const checkAccessTokenExpire = (expiresIn, updateAt) => {
-  const currentTime = moment().unix();
-  if (expiresIn + updateAt > currentTime) {
-    return false; // not expired
-  }
-  return true; // expired
-};
 
 
 const getAccessToken = (req) => {
@@ -33,51 +24,89 @@ const getAccessToken = (req) => {
   return access_token;
 };
 
-router.get('good', (req,res) => {
-  return res.json('good')
-})
+router.post("/calendar/available", async (req, res) => {
+
+  try {
+
+      // duration in minutes
+      let { fromDate, timeZone, counselorId, id: meetingId, duration = 15 } = req.body;
+
+      const available = await CounselorSetting.availableTime(
+        fromDate,
+        duration,
+        timeZone,
+        counselorId
+      );
+      
+      const { avFromTime, avToTime } = available;
+
+      const events = await calendar.listEvents(
+        avFromTime.toISOString(),
+        avToTime.toISOString(),
+        100
+      );
+
+      const lists = CounselorSetting.getListTimes({
+        avFromTime,
+        avToTime,
+        duration,
+        userTimeZone: timeZone,
+        meetingId,
+        events,
+      });
+
+      const data = {
+        lists,
+        avFromTime: avFromTime.toLocaleString(),
+        avToTime: avToTime.toLocaleString(),
+        events,
+        available,
+      };
+    
+    res.json(data);
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "something went wrong" });
+  }
+
+});
 
 router.post("/meetings", async (req, res) => {
   try {
     const token = getAccessToken(req);
 
-    const { counselorId = null } = req.body
-    
-
     const { topic, start_time, duration } = req.body;
+
     const fromDate = start_time;
+
     const toDate = moment(start_time).add(duration, "minutes");
+    
     // check working hours
     const available = await CounselorSetting.isAvailable(fromDate, toDate);
-
-    if (counselorId) {
-      
-    }
     if (available) {
-    // check calendars
-    const free = await calendar.freeBusy(fromDate, toDate);
 
-    if (free) {
-        const data = await ZoomApi.createMeeting(token, req.body);
-        //const { password, start_url, join_url } = data;
+      const data = await ZoomApi.createMeeting(token, req.body);
+      const { password, start_url, join_url } = data;
 
-        // const desc = `
-        //               Password: ${password}
-        //               Start Url: ${start_url}
-        //               Join Url: ${join_url}
-        //           `;
-        // const event = GoogleEvent.createEventData({
-        //   topic,
-        //   start_time,
-        //   duration,
-        //   agenda: desc,
-        //   meetingId: data.id,
-        // });
-        // await calendar.addEvent(event);
-        return res.json(data);
-      }
+      // const desc = `
+      //               Password: ${password}
+      //               Start Url: ${start_url}
+      //               Join Url: ${join_url}
+      //           `;
+      // const event = GoogleEvent.createEventData({
+      //   topic,
+      //   start_time,
+      //   duration,
+      //   agenda: desc,
+      //   meetingId: data.id,
+      // });
+      // await calendar.addEvent(event);
+      return res.json(data);
+      // }
+      // }
+      // return res.json({ notAvailable: 1 });
     }
-    return res.json({ notAvailable: 1 });
   } catch (err) {
     if (err.response.status == 401) {
       return res.json({
@@ -91,14 +120,15 @@ router.post("/meetings", async (req, res) => {
     return res.status(err.response.status).json(err);
   }
 });
+  
 
 router.patch("/meetings/:id", async (req, res) => {
   try {
-    // const token = getAccessToken(req);
-    // const { start_time } = req.body;
-    // const meetingId = req.params.id;
-    // const fromDate = start_time;
-    // const meetingData = await ZoomApi.getMeeting(token, meetingId);
+    const token = getAccessToken(req);
+    const { start_time } = req.body;
+    const meetingId = req.params.id;
+    const fromDate = start_time;
+    const meetingData = await ZoomApi.getMeeting(token, meetingId);
     // const eventDataFromCalendar = await calendar.getEvent(meetingId);
     // const { duration, topic, password, start_url, join_url } = meetingData;
     // const toDate = moment(start_time).add(duration, "minutes");
@@ -207,7 +237,7 @@ router.delete("/meetings/:id", async (req, res) => {
   }
 });
 
-router.get('/oauth/callback', async (req, res) => {
+router.get('/oauth/callback', async (req, res, next) => {
   try {
     if (req.query.code) {
       const { access_token, refresh_token, expires_in } = await ZoomApi.oauth2(
@@ -225,10 +255,8 @@ router.get('/oauth/callback', async (req, res) => {
 
       req.session.ztoken = JSON.stringify(ztoken);
 
-      //return res.status(200).json(access_token)
-
-      return res.redirect(`${config.appUrl}/zoom-oauth?code=${req.query.code}`);
-
+      return res.status(200).json(access_token)
+      //return res.redirect(`${config.appUrl}/zoom-oauth?code=${req.query.code}`);
     }
 
     // If no authorization code is available, redirect to Zoom OAuth to authorize
